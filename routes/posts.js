@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+var moment = require('moment');
+
 
 const Posting = require("../schemas/Posting")
 
@@ -8,12 +10,16 @@ router.get('/', async (req,res) => {
 
     const posts = await Posting.find().sort({createdAt: -1})
 
+    if(posts.length === 0){
+      return res.status(200).json({message: "글을 먼저 작성해주세요!"})
+    }
+   
     const results = posts.map((posts)=> {
       return {
-        postId : posts._id,
+        postId : posts.postId,
         user : posts.user,
         title : posts.title,
-        createdAt : posts.createdAt,        
+        createdAt : posts.createdAt
       }
     })
     res.json({
@@ -25,26 +31,24 @@ router.get('/', async (req,res) => {
 
 //게시물 상세조회 통과
 
-router.get('/:_postId', async (req,res) => {
+router.get('/:Id', async (req,res) => {
   
-  let { _postId } = req.params;
-  if(_postId.length !== 24){
-    _postId = '000000000000000000000000'
-  }
+  let { Id } = req.params;
+
   try{
   
-  const posts = await Posting.find({ _id : _postId})
+  const posts = await Posting.find({ postId : Id})
   console.log(posts)
-  if( _postId ==='000000000000000000000000' || posts.length === 0 ) {
+  if(posts.length === 0 ) {
     return res.status(400).json({message: '존재하지않는 게시물입니다.' })
   } else {
   const results = posts.map((posts)=> {
     return {
-      postId : posts._id,
+      postId : posts.id,
       user : posts.user,
       title : posts.title,
       content : posts.content,
-      createdAt : posts.createdAt,
+      createdAt : posts.createdAt
     }
   })
   res.json({
@@ -72,19 +76,16 @@ router.post('/', async (req, res) => {
 
 //게시물 수정 통과
 
-router.put('/:_postId', async (req,res) => {
+router.put('/:Id', async (req,res) => {
 
-   let { _postId } = req.params;
-    if(_postId.length !== 24){
-      _postId = '000000000000000000000000'
-    }
+   let { Id } = req.params;
 
-    const posts = await Posting.findOne({_id : _postId })
+    const posts = await Posting.findOne({ postId : Id })
     console.log(posts)
 
     try {
 
-    if( _postId ==='000000000000000000000000' || posts === null ) {
+    if(posts === null ) {
       return res.status(404).json({message: '게시글 조회에 실패하였습니다.'})
     }
     
@@ -100,7 +101,7 @@ router.put('/:_postId', async (req,res) => {
       return res.status(400).json({message: "변경사항이 없습니다."})
     }
     if([posts].length){
-      await Posting.updateOne({_id : _postId }, { $set: req.body});
+      await Posting.updateOne({ postId : Id }, { $set: req.body});
    }
    res.json({ message: "게시물을 수정하였습니다."})
   } catch (error){
@@ -111,18 +112,15 @@ router.put('/:_postId', async (req,res) => {
 
 //게시물 삭제 통과
 
-router.delete('/:_postId', async (req,res) => {
+router.delete('/:Id', async (req,res) => {
 
-  let { _postId } = req.params
+  let { Id } = req.params
 
-  if(_postId.length !== 24){
-    _postId = '000000000000000000000000'
-  }
   try{
-  const posts = await Posting.findOne({_id : _postId})
+  const posts = await Posting.findOne({postId : Id})
   console.log(posts)
 
-  if( _postId ==='000000000000000000000000' || posts === null ) {
+  if(posts === null ) {
     return res.status(404).json({message: '게시글 조회에 실패하였습니다.' })
   }
 
@@ -131,12 +129,12 @@ router.delete('/:_postId', async (req,res) => {
   }
   
   if([posts].length > 0){
-    await Posting.deleteOne({_postId})
+    await Posting.deleteOne({postId : Id})
   }
   
   res.json({message : "게시물을 삭제하였습니다."})
 } catch(error) {
-  
+  console.log(error)
   res.status(500).json({error})
  }
 })

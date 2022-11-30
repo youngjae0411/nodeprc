@@ -1,28 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose")
-const ObjectId = mongoose.Types.ObjectId;
+
 
 const Comment = require('../schemas/Comment')
 const Posting = require('../schemas/Posting')
 
 //댓글 작성 통과  
-router.post('/:_postId', async (req, res) => {
+router.post('/:Id', async (req, res) => {
   
-  let { _postId } = req.params
+  let { Id } = req.params
   
-
-  if(_postId.length !== 24){
-    _postId = '000000000000000000000000'
-  }
-  console.log(_postId)
 
   try{
-    const posts = await Posting.findOne({_id : _postId })
+    const posts = await Posting.findOne({postId : Id })
     console.log(posts)
   
 
-    if( _postId ==='000000000000000000000000' || posts === null ) {
+    if(posts === null ) {
       return res.status(404).json({message: '존재하지 않는 게시물입니다.' })
     }
 
@@ -36,9 +31,9 @@ router.post('/:_postId', async (req, res) => {
       return res.status(400).json({message : "댓글 내용을 입력해주세요"})
     }
 
-    const  obj_postId  = ObjectId(req.params._postId)
+    const  postId  = req.params.Id
 
-    await Comment.create({ postId :obj_postId, user : req.body.user, password : req.body.password, content : req.body.content })
+    await Comment.create({ postId : postId, user : req.body.user, password : req.body.password, content : req.body.content })
     res.status(201).json({message : '댓글이 생성되었습니다.'})
     } catch(error) {
       console.log(error)
@@ -48,26 +43,24 @@ router.post('/:_postId', async (req, res) => {
 })
 
 //댓글 목록 조회 통과
-router.get('/:_postId', async (req,res) => {
-  let { _postId } = req.params
-  if(_postId.length !== 24){
-    _postId = '000000000000000000000000'
-  }
+router.get('/:Id', async (req,res) => {
+  let { Id } = req.params
+
   try {
-    const posts = await Posting.findOne({_id : _postId })
-    if( _postId ==='000000000000000000000000' || posts === null ) {
+    const posts = await Posting.findOne({postId : Id })
+    if(posts === null ) {
       return res.status(404).json({message: '존재하지 않는 게시물입니다.' })
     }
 
-    const comments = await Comment.find({postId : _postId}).sort({createdAt: -1})
+    const comments = await Comment.find({postId : Id }).sort({createdAt: -1})
 
 
     const results = comments.map((comment) => {
       return {
-        commentId: comment._id,      
+        commentId: comment.commentId,      
         user: comment.user,      
         content: comment.content,     
-        createdAt: comment.createdAt   
+        createdAt: comment.createdAt
       }  
     })
       res.json({data : results})
@@ -78,21 +71,13 @@ router.get('/:_postId', async (req,res) => {
 })
 
 //댓글 수정 통과
-router.put('/:_commentId', async (req,res) => {
-  let { _commentId } = req.params
-
-  if(_commentId.length !== 24){
-    _commentId = '000000000000000000000000'
-  }
+router.put('/:commentId', async (req,res) => {
+  let { commentId } = req.params
 
   try {
-    const comments = await Comment.findOne({_id : _commentId})
+    const comments = await Comment.findOne({commentId : commentId})
     console.log(comments)
     
-    if(_commentId === '000000000000000000000000'){
-      return res.status(404).json({message: '데이터 형식이 올바르지 않습니다.'})
-    }
-
     if(comments === null){
       return res.status(404).json({message : '존재하지않는 댓글입니다.'})
     }
@@ -106,7 +91,7 @@ router.put('/:_commentId', async (req,res) => {
     }
 
     if([comments].length){
-      await Comment.updateOne({_id : _commentId }, { $set: req.body});
+      await Comment.updateOne({commentId : commentId }, { $set: req.body});
     }
     res.json({ message: "댓글을 수정하였습니다."})
   } catch(error) {
@@ -117,20 +102,13 @@ router.put('/:_commentId', async (req,res) => {
 })
 
 //댓글 삭제 통과
-router.delete('/:_commentId', async (req,res) => {
-  let { _commentId } = req.params
+router.delete('/:commentId', async (req,res) => {
+  let { commentId } = req.params
 
-  if(_commentId.length !== 24){
-    _commentId = '000000000000000000000000'
-  }
 
   try {
     
-    const comments = await Comment.findOne({_id : _commentId})
-
-    if(_commentId === '000000000000000000000000'){
-      return res.status(404).json({message: '데이터 형식이 올바르지 않습니다.'})
-    }
+    const comments = await Comment.findOne({commentId : commentId})
 
     if(comments === null){
       return res.status(404).json({message : "존재하지않는 댓글입니다."})
@@ -143,7 +121,7 @@ router.delete('/:_commentId', async (req,res) => {
 
 
     if(comments !== null){
-    await Comment.deleteOne({_commentId})
+    await Comment.deleteOne({commentId})
     }
 
     res.status(200).json({message: "댓글이 삭제되었습니다."})

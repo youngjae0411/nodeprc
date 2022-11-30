@@ -1,13 +1,11 @@
 const mongoose = require('mongoose')
-const Schema = require('mongoose').Schema;
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 
 const CommentSchema = mongoose.Schema({
 
   postId : {
-    type : Schema.Types.ObjectId,
-    required: true,
-    ref: 'Posting',
+    type : String
   },
 
   user : {
@@ -22,8 +20,13 @@ const CommentSchema = mongoose.Schema({
     type : String,
     required: true
   },
+  createdAt : {
+    type : String,
+    default : Date.now
+  }
+})
 
-}, {timestamps: true})
+CommentSchema.plugin(AutoIncrement, { inc_field: "commentId" });
 
 const Comment = mongoose.model('Comment ', CommentSchema);
 

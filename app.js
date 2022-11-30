@@ -9,7 +9,6 @@ require('dotenv').config();
 
 app.use('/api/posts', require('./routes/posts'))
 app.use('/api/comments', require('./routes/comment'))
-app.use('/api/', require('./routes/index'))
 
 
 app.listen(process.env.PORT, ()=> {
