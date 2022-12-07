@@ -67,7 +67,7 @@ router.post('/login' , auth ,async (req,res) => {
     {expiresIn : 60 * 60}
     );
 
-  return res.cookie('token', token).status(201).json({token : token})
+  return res.cookie('authorization', "Bearer%" + token).status(201).json({token : token})
   
   }catch (error) {
     console.log(error)

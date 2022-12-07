@@ -2,8 +2,10 @@ const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
 module.exports = (req, res, next) => {
-  const { authorization } = req.headers;
-  const [authType, authToken] = (authorization || "").split(" ");
+  const { authorization } = req.cookies;
+
+  
+  const [authType, authToken] = (authorization || "").split("%");
 
   if (!authToken || authType !== "Bearer") {
     res.status(401).send({

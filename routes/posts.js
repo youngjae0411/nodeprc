@@ -13,14 +13,14 @@ router.get('/', async (req,res) => {
         model : User,
         attributes : ['nickname']
       }],
-      order: [["createdAt", "desc"]]
+      order: [["updatedAt", "desc"]]
     })
 
     if(posts.length === 0){
       return res.status(200).json({message: "글을 먼저 작성해주세요!"})
     }
 
-   
+    //Promise.allSettled
     const results =  await Promise.all(posts.map( async (posts)=> {
 
       const count = await Likes.count({
@@ -34,8 +34,9 @@ router.get('/', async (req,res) => {
         userId : posts.userId,
         nickname : posts.User.nickname,
         title : posts.title,
-        createdAt : posts.createdAt,
-        like : count
+        like : count,
+        createdAt : posts.createdAt,       
+        updatedAt : posts.updatedAt
       }
     }))
     res.json({
@@ -85,8 +86,9 @@ router.get('/:Id', async (req,res) => {
       nickname : posts.User.nickname,
       title : posts.title,
       content : posts.content,
+      like : count,
       createdAt : posts.createdAt,
-      like : count
+      updatedAt : posts.updatedAt
     }
   }))
 

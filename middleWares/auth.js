@@ -4,8 +4,10 @@ const { User } = require("../models");
 module.exports = (req, res, next) => {
 
   
-  const { authorization } = req.headers;
-  const [authType, authToken] = (authorization || "").split(" ");
+  const { authorization } = req.cookies;
+  console.log(authorization)
+  
+  const [authType, authToken] = (authorization || "").split("%");
   try{
   if (authToken && authType === "Bearer") {    
     const { userId } = jwt.verify(authToken, process.env.SECRET);
@@ -15,8 +17,9 @@ module.exports = (req, res, next) => {
         res.status(401).send({errorMessage: "이미 로그인이 되어있습니다."});
       } 
     });
-    return;}  
-      next();
+    return;
+  }  
+    next();
   } 
   catch (error){
     console.log(error)
