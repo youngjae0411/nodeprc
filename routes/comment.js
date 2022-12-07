@@ -1,43 +1,42 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose")
-
-
-const Comment = require('../schemas/Comment')
-const Posting = require('../schemas/Posting')
+const { Op } = require("sequelize");
+const authMiddleware = require("../middleWares/auth-middleware");
+const { User, Posts, Comments } = require("../models");
 
 //댓글 작성 통과  
-router.post('/:Id', async (req, res) => {
+router.post('/:Id', authMiddleware, async (req, res) => {
   
   let { Id } = req.params
-  
 
   try{
-    const posts = await Posting.findOne({postId : Id })
+    const posts = await Posts.findAll({
+      where: {
+        [Op.or] : [{postId : Id}]
+      }
+    })
     console.log(posts)
   
 
-    if(posts === null ) {
+    if(posts.length === 0 ) {
       return res.status(404).json({message: '존재하지 않는 게시물입니다.' })
     }
 
-    if(req.body.password === undefined){
-      return res.status(400).json({message: "비밀번호를 입력해주세요"})
-    }
-    if(req.body.user === undefined){
-      return res.status(400).json({message : "유저를 입력해주세요"})
-    }
-    if(req.body.content === undefined){
+    if(req.body.content === undefined || req.body.content.length === 0){
       return res.status(400).json({message : "댓글 내용을 입력해주세요"})
     }
 
     const  postId  = req.params.Id
+    const content = req.body.content
 
-    await Comment.create({ postId : postId, user : req.body.user, password : req.body.password, content : req.body.content })
+    await Comments.create({ 
+      postId : postId, userId : res.locals.user.userId, content : content
+    })
+
     res.status(201).json({message : '댓글이 생성되었습니다.'})
     } catch(error) {
       console.log(error)
-      res.status(500).json({error: error})
+      res.status(400).json({errorMessage: "댓글 작성에 실패하였습니다."})
     }
 
 })
@@ -47,20 +46,39 @@ router.get('/:Id', async (req,res) => {
   let { Id } = req.params
 
   try {
-    const posts = await Posting.findOne({postId : Id })
+    const posts = await Posts.findOne({
+      where: {
+      [Op.or] : [{postId : Id}] 
+      },
+      order: [["createdAt", "desc"]]
+    })
+
     if(posts === null ) {
       return res.status(404).json({message: '존재하지 않는 게시물입니다.' })
     }
 
-    const comments = await Comment.find({postId : Id }).sort({createdAt: -1})
+    const Comment = await Comments.findAll({
+      where : {
+        [Op.or] : [{postId : Id}]
+      },
+      include: [{
+        model : User,
+        attributes : ['nickname']
+      }] 
+    })
+    console.log(Comment)
+    if(Comment.length === 0 ) {
+      return res.status(404).json({message: '댓글이 존재하지않습니다.' })
+    }
 
 
-    const results = comments.map((comment) => {
+    const results = Comment.map((Comments) => {
       return {
-        commentId: comment.commentId,      
-        user: comment.user,      
-        content: comment.content,     
-        createdAt: comment.createdAt
+        CommentsId: Comments.commentId,      
+        userId : Comments.userId,
+        nickname : Comments.User.nickname,    
+        content: Comments.content,     
+        createdAt: Comments.createdAt
       }  
     })
       res.json({data : results})
@@ -71,28 +89,31 @@ router.get('/:Id', async (req,res) => {
 })
 
 //댓글 수정 통과
-router.put('/:commentId', async (req,res) => {
-  let { commentId } = req.params
+router.put('/:CommentsId',authMiddleware, async (req,res) => {
+  let { CommentsId } = req.params
 
   try {
-    const comments = await Comment.findOne({commentId : commentId})
-    console.log(comments)
+    const comments = await Comments.findOne({
+      where: {
+        [Op.or] : [{commentId : CommentsId}]
+      }
+    })
+    console.log(res.locals.user)
     
     if(comments === null){
       return res.status(404).json({message : '존재하지않는 댓글입니다.'})
     }
 
-    if(req.body.password !== comments.password){
-      return res.status(401).json({message: "비밀번호를 확인해주세요"})
+    if(res.locals.user.userId !== comments.userId) {
+      return res.status(412).json({errorMessage : "권한이 없습니다."})
     }
 
     if(req.body.content === undefined || req.body.content.length === 0){
-      return res.status(400).json({message: "댓글 내용을 입력해주세요"})
+      return res.status(412).json({errorMessage: "데이터 형식이 올바르지 않습니다."})
     }
 
-    if([comments].length){
-      await Comment.updateOne({commentId : commentId }, { $set: req.body});
-    }
+      await Comments.update({content : req.body.content }, {where: {commentId : CommentsId}});
+    
     res.json({ message: "댓글을 수정하였습니다."})
   } catch(error) {
     console.log(error)
@@ -102,33 +123,38 @@ router.put('/:commentId', async (req,res) => {
 })
 
 //댓글 삭제 통과
-router.delete('/:commentId', async (req,res) => {
-  let { commentId } = req.params
+router.delete('/:CommentsId', authMiddleware, async (req,res) => {
+  let { CommentsId } = req.params
 
 
   try {
     
-    const comments = await Comment.findOne({commentId : commentId})
+    const comments = await Comments.findOne({
+      where: {
+      [Op.or] : [{commentId : CommentsId}]
+      }
+    })
 
     if(comments === null){
       return res.status(404).json({message : "존재하지않는 댓글입니다."})
     }
 
-    if(comments.password !== req.body.password){
-      return res.status(401).json({message : "비밀번호를 확인해주세요."})
+    if(res.locals.user.userId !== comments.userId) {
+      return res.status(412).json({errorMessage : "권한이 없습니다."})
     }
 
 
-
     if(comments !== null){
-    await Comment.deleteOne({commentId})
+    await Comments.destroy({
+      where: {commentId : CommentsId}
+      })
     }
 
     res.status(200).json({message: "댓글이 삭제되었습니다."})
 
   } catch(error) {
     console.log(error)
-    res.status(500).json({error})
+    res.status(400).json({errorMessage: "댓글 삭제에 실패하였습니다."})
   }
 })
 
