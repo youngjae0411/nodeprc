@@ -5,7 +5,6 @@ module.exports = (req, res, next) => {
 
   
   const { authorization } = req.cookies;
-  console.log(authorization)
   
   const [authType, authToken] = (authorization || "").split("%");
   try{
@@ -23,6 +22,9 @@ module.exports = (req, res, next) => {
   } 
   catch (error){
     console.log(error)
-    res.status(400).send({errorMessage: "데이터의 형식이 올바르지 않습니다."})
+    if(error.message === 'jwt expired'){
+      next();
+    } else {
+    res.status(400).send({errorMessage: "데이터의 형식이 올바르지 않습니다."})}
   }
 };
