@@ -8,8 +8,8 @@ const router = express.Router();
  *   description: 회원가입 및 로그인
  */
 
-router.use("/api/posts", require("./posts"));
-router.use("/api/comments", require("./comment"));
+router.use("/api/posts", require("./posts.route"));
+router.use("/api/comments", require("./comment.route"));
 
 /**
  * @swagger
@@ -18,7 +18,7 @@ router.use("/api/comments", require("./comment"));
  *   description: 회원가입 및 로그인
  */
 
-router.use("/api/users", require("./users"));
-router.use("/api/likes", require("./like"));
+router.use("/api/users", require("./users.route"));
+router.use("/api/likes", require("./like.route"));
 
 module.exports = router;

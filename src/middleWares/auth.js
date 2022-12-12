@@ -7,6 +7,7 @@ module.exports = (req, res, next) => {
   const { authorization } = req.cookies;
   
   const [authType, authToken] = (authorization || "").split("%");
+  console.log(authToken)
   try{
   if (authToken && authType === "Bearer") {    
     const { userId } = jwt.verify(authToken, process.env.SECRET);
