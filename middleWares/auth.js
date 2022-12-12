@@ -13,7 +13,7 @@ module.exports = (req, res, next) => {
     User.findByPk(userId).then((user) => {
       if(user){
         console.log(user)
-        res.status(401).send({errorMessage: "이미 로그인이 되어있습니다."});
+        res.status(403).send({errorMessage: "이미 로그인이 되어있습니다."});
       } 
     });
     return;
