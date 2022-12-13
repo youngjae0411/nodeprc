@@ -3,19 +3,19 @@ const LikesRepository = require("../repositories/likes.repositories");
 
 class PostsService {
   constructor() {
-    this.postsRepository = new PostsRepository(),
-    (this.likesRepository = new LikesRepository());
+    (this.postsRepository = new PostsRepository()),
+      (this.likesRepository = new LikesRepository());
   }
 
   findAllPosts = async () => {
     const posts = await this.postsRepository.findAllPosts();
+    if (posts.length === 0) throw new Error("Post doesn't exist");
 
-    return await Promise.all(
+    return Promise.all(
       posts.map(async (post) => {
+        const { postId, userId, title, createdAt, updatedAt } = post;
+        const count = await this.likesRepository.countLike(postId);
 
-        const {postId, userId, title, createdAt, updatedAt} = post
-        const count = await this.likesRepository.countLike(postId)
-         
         return {
           postId: postId,
           userId: userId,
@@ -35,9 +35,8 @@ class PostsService {
 
     return await Promise.all(
       post.map(async (post) => {
-
-        const {postId, userId, title, content, createdAt, updatedAt} = post
-        const count = await this.likesRepository.countLike(postId)
+        const { postId, userId, title, content, createdAt, updatedAt } = post;
+        const count = await this.likesRepository.countLike(postId);
 
         return {
           postId: postId,
@@ -77,9 +76,11 @@ class PostsService {
 
   deletePost = async (Id) => {
     const post = await this.postsRepository.findOnePost(Id);
-    const deletePost = await this.postsRepository.deletePost(Id);
+    if (post.length === 0) throw new Error("Post doesn't exist");
 
-    return post, deletePost;
+    await this.postsRepository.deletePost(Id);
+
+    return post;
   };
 }
 

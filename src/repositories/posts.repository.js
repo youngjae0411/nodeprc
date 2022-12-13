@@ -14,8 +14,7 @@ class PostsRepository {
   };
 
   findOnePost = async (Id) => {
-    
-      return Posts.findAll({
+    return Posts.findAll({
       where: {
         [Op.or]: [{ postId: Id }],
       },

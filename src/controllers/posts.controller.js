@@ -57,7 +57,6 @@ class PostsController {
     }
   };
 
-  //미완성
   updatePost = async (req, res) => {
     try {
       const { Id } = req.params;
@@ -66,11 +65,7 @@ class PostsController {
 
       const post = await this.postsService.findOnePost(Id);
 
-      if (post.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "게시글 조회에 실패하였습니다." });
-      } else if (userId !== post[0].userId) {
+      if (userId !== post[0].userId) {
         return res.status(412).json({ errorMessage: "권한이 없습니다." });
       } else if (!content && !title) {
         return res
@@ -86,8 +81,7 @@ class PostsController {
       res.status(400).json({ errorMessage: "게시글 수정에 실패하였습니다." });
     }
   };
-  
-  //미완성2
+
   deletePost = async (req, res) => {
     try {
       const { Id } = req.params;
@@ -95,13 +89,10 @@ class PostsController {
 
       const post = await this.postsService.findOnePost(Id);
 
-      if (post.length === 0) {
-        return res.status(404).json({ message: "게시글이 존재하지않습니다." });
-      }
-
       if (userId !== post[0].userId) {
         return res.status(412).json({ errorMessage: "권한이 없습니다." });
       }
+
       await this.postsService.deletePost(Id);
 
       res.json({ message: "게시물을 삭제하였습니다." });

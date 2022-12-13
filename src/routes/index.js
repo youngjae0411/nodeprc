@@ -9,7 +9,7 @@ const router = express.Router();
  */
 
 router.use("/api/posts", require("./posts.route"));
-router.use("/api/comments", require("./comment.route"));
+router.use("/api", require("./comment.route"));
 
 /**
  * @swagger

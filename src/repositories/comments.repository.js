@@ -44,8 +44,6 @@ class CommentsRepository {
   };
 
   deleteComment = async ({ commentId }) => {
-    console.log(commentId);
-
     const comment = await Comments.destroy({
       where: { commentId },
     });

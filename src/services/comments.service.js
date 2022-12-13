@@ -9,7 +9,6 @@ class CommentsService {
 
   createComment = async (content, Id, userId) => {
     const post = await this.postsRepository.findOnePost(Id);
-    console.log(post)
     if (post.length === 0) throw new Error("Post doesn't exist");
 
     await this.commentsRepository.createComment({
@@ -24,6 +23,7 @@ class CommentsService {
     if (post.length === 0) throw new Error("Post doesn't exist");
 
     const comments = await this.commentsRepository.findComments({ Id });
+    if (comments.length === 0) throw new Error("Comment doesn't exist");
 
     return await comments.map((comment) => {
       return {

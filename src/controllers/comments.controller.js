@@ -20,7 +20,7 @@ class CommentsController {
       if (!content) {
         return res.status(400).json({ message: "댓글 내용을 입력해주세요" });
       }
-      
+
       await this.commentsService.createComment(content, Id, userId);
 
       res.status(201).json({ message: "댓글이 생성되었습니다." });
@@ -35,10 +35,6 @@ class CommentsController {
       const { Id } = req.params;
 
       const comments = await this.commentsService.findComments(Id);
-
-      if (comments.length === 0) {
-        return res.status(404).json({ message: "댓글이 존재하지않습니다." });
-      }
 
       res.json({ data: comments });
     } catch (error) {
@@ -58,14 +54,12 @@ class CommentsController {
           .json({ errorMessage: "데이터 형식이 올바르지 않습니다." });
       }
 
-      const comment = await this.commentsService.updateComment(
-        commentId,
-        content
-      );
+      const comments = await this.commentsService.updateComment(commentId);
 
-      if (userId !== comment.userId) {
+      if (userId !== comments.userId) {
         return res.status(412).json({ errorMessage: "권한이 없습니다." });
       }
+      await this.commentsService.updateComment(commentId, content);
 
       res.json({ message: "댓글을 수정하였습니다." });
     } catch (error) {
@@ -73,7 +67,7 @@ class CommentsController {
       res.status(400).json({ errorMessage: "댓글 수정에 실패하였습니다." });
     }
   };
-
+  // 에러
   deleteComment = async (req, res) => {
     try {
       const { commentId } = req.params;
@@ -81,10 +75,11 @@ class CommentsController {
 
       const comment = await this.commentsService.deleteComment(commentId);
 
-      if (userId !== comment.userId) {
+      if (userId === comment.userId) {
         return res.status(412).json({ errorMessage: "권한이 없습니다." });
+      } else {
+        await this.commentsService.deleteComment(commentId);
       }
-
       res.status(200).json({ message: "댓글이 삭제되었습니다." });
     } catch (error) {
       console.log(error);
